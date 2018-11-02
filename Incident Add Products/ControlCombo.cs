@@ -19,30 +19,30 @@ namespace Incident_Add_Products
 {
     public partial class ControlCombo : UserControl
     {
-        private bool inDesignMode;
+        public bool inDesignMode;
         public List<RootObject> InsertedServices { get; set; }
-        private IRecordContext recordContext;
-        private IGlobalContext globalContext;
-        private IIncident Incident { get; set; }
-        private IGenericObject SerObject;
-        private IGenericObject ItiObject;
-        private int AirportID { get; set; }
+        public IRecordContext recordContext;
+        public IGlobalContext globalContext;
+        public IIncident Incident { get; set; }
+        public IGenericObject SerObject;
+        public IGenericObject ItiObject;
+        public int AirportID { get; set; }
         public string AirtportText { get; set; }
-        string SRType { get; set; }
-        int IdIncident { get; set; }
-        int IdItinerary { get; set; }
-        RightNowSyncPortClient client;
-        string result { get; set; }
-        string ItemClaveSat { get; set; }
-        string ParticipacionCobro { get; set; }
-        string CuentaGasto { get; set; }
-        string CobroParticipacionNj { get; set; }
-        string Pagos { get; set; }
-        string ClasificacionPago { get; set; }
-        string Informativo { get; set; }
-        string Component { get; set; }
-        string Pax { get; set; }
-        string Categories { get; set; }
+        public string SRType { get; set; }
+        public int IdIncident { get; set; }
+        public int IdItinerary { get; set; }
+        public RightNowSyncPortClient client;
+        public string result { get; set; }
+        public string ItemClaveSat { get; set; }
+        public string ParticipacionCobro { get; set; }
+        public string CuentaGasto { get; set; }
+        public string CobroParticipacionNj { get; set; }
+        public string Pagos { get; set; }
+        public string ClasificacionPago { get; set; }
+        public string Informativo { get; set; }
+        public string Component { get; set; }
+        public string Pax { get; set; }
+        public string Categories { get; set; }
         public string ItemNumberParent { get; set; }
         public string ItemDesc { get; set; }
 
@@ -69,7 +69,7 @@ namespace Incident_Add_Products
                     GetAirport();
                     SRType = GetSRType();
                     AirtportText = GetAirportText();
-                    if (!String.IsNullOrEmpty(SRType) && !String.IsNullOrEmpty(AirtportText))
+                    if (!String.IsNullOrEmpty(SRType))
                     {
                         GetPData(AirtportText, SRType, "");
                     }
@@ -123,9 +123,17 @@ namespace Incident_Add_Products
                  "<typ1:conjunction>And</typ1:conjunction>" +
                  "<typ1:upperCaseCompare>true</typ1:upperCaseCompare>" +
                  "<typ1:attribute>OrganizationCode</typ1:attribute>" +
-                 "<typ1:operator>=</typ1:operator>" +
-                 "<typ1:value>IO_AEREO_" + AirportText + "</typ1:value>" +
-                 "</typ1:item>" +
+                 "<typ1:operator>=</typ1:operator>";
+                
+                if (SRType == "SENEAM" || SRType == "PERMISOS")
+                {
+                    envelope += "<typ1:value>MTS_ITEM</typ1:value>";
+                }
+                else
+                {
+                    envelope += "<typ1:value>IO_AEREO_" + AirportText + "</typ1:value>";
+                }
+                envelope += "</typ1:item>" +
                  "<typ1:item>" +
                  "<typ1:conjunction>And</typ1:conjunction>" +
                  "<typ1:upperCaseCompare>true</typ1:upperCaseCompare>" +
@@ -288,6 +296,17 @@ namespace Incident_Add_Products
                             }
                             if (test.Count > 0)
                             {
+                                if (SRType == "FBO")
+                                {
+                                    if (GetCountryItinerary(IdItinerary))
+                                    {
+                                        test.Remove("IISNNAP248");
+                                    }
+                                    else
+                                    {
+                                        test.Remove("DISONAP249");
+                                    }
+                                }
                                 CboProductos.DataSource = new BindingSource(test.OrderBy(item => item.Value), null);
                                 CboProductos.DisplayMember = "Value";
                                 CboProductos.ValueMember = "Key";
@@ -435,6 +454,30 @@ namespace Incident_Add_Products
                     break;
             }
             return SRTYPE;
+        }
+        public bool GetCountryItinerary(int Itinerary)
+        {
+            bool res = true;
+            ClientInfoHeader clientInfoHeader = new ClientInfoHeader();
+            APIAccessRequestHeader aPIAccessRequest = new APIAccessRequestHeader();
+            clientInfoHeader.AppID = "Query Example";
+            String queryString = "SELECT FromAirport.Country.IsoCode,ToAirport.Country.IsoCode FROM CO.Itinerary WHERE Id = " + Itinerary;
+            client.QueryCSV(clientInfoHeader, aPIAccessRequest, queryString, 1, "|", false, false, out CSVTableSet queryCSV, out byte[] FileData);
+            foreach (CSVTable table in queryCSV.CSVTables)
+            {
+
+                String[] rowData = table.Rows;
+                foreach (String data in rowData)
+                {
+                    Char delimiter = '|';
+                    String[] substring = data.Split(delimiter);
+                    if (substring[0] != "MX" || substring[1] != "MX")
+                    {
+                        res = false;
+                    }
+                }
+            }
+            return res;
         }
         public string GetAirportText()
         {
