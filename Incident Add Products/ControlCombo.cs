@@ -45,6 +45,7 @@ namespace Incident_Add_Products
         public string Categories { get; set; }
         public string ItemNumberParent { get; set; }
         public string ItemDesc { get; set; }
+        public List<Items> items { get; set; }
 
 
 
@@ -115,7 +116,7 @@ namespace Incident_Add_Products
                      "<typ1:conjunction>And</typ1:conjunction>" +
                      "<typ1:upperCaseCompare>true</typ1:upperCaseCompare>" +
                      "<typ1:attribute>ItemNumber</typ1:attribute>" +
-                     "<typ1:operator>=</typ1:operator>" +
+                     "<typ1:operator>CONTAINS</typ1:operator>" +
                      "<typ1:value>" + ItemN + "</typ1:value>" +
                      "</typ1:item>";
                 }
@@ -124,7 +125,7 @@ namespace Incident_Add_Products
                  "<typ1:upperCaseCompare>true</typ1:upperCaseCompare>" +
                  "<typ1:attribute>OrganizationCode</typ1:attribute>" +
                  "<typ1:operator>=</typ1:operator>";
-                
+
                 if (SRType == "SENEAM" || SRType == "PERMISOS")
                 {
                     envelope += "<typ1:value>MTS_ITEM</typ1:value>";
@@ -265,13 +266,13 @@ namespace Incident_Add_Products
                         }
                         else
                         {
+                            items = new List<Items>();
                             Dictionary<string, string> test = new Dictionary<string, string>();
                             AutoCompleteStringCollection dataCollection = new AutoCompleteStringCollection();
                             XmlNodeList nodeList = xmlDoc.SelectNodes("//ns0:Value", nms);
                             foreach (XmlNode node in nodeList)
                             {
-                                string INum = "";
-                                string IDesc = "";
+                                Items item = new Items();
                                 if (node.HasChildNodes)
                                 {
                                     if (node.LocalName == "Value")
@@ -281,17 +282,20 @@ namespace Incident_Add_Products
                                         {
                                             if (nodeValue.LocalName == "ItemNumber")
                                             {
-                                                INum = nodeValue.InnerText;
+                                                item.ItemNumber = nodeValue.InnerText;
                                             }
                                             if (nodeValue.LocalName == "ItemDescription")
                                             {
-                                                IDesc = nodeValue.InnerText;
-                                                dataCollection.Add(IDesc);
+                                                item.Description = nodeValue.InnerText;
+
                                             }
                                         }
                                     }
-                                    test.Add(INum, IDesc);
-
+                                    if (item.ItemNumber != "AGASIAS0270" && item.ItemNumber != "JFUEIAS0269" && item.ItemNumber != "AGASIAS0011" && item.ItemNumber != "JFUEIAS0010" && item.ItemNumber != "IAFMUAS0271" && item.ItemNumber != "AFMURAS0016")
+                                    {
+                                        test.Add(item.ItemNumber, item.Description);
+                                        items.Add(item);
+                                    }
                                 }
                             }
                             if (test.Count > 0)
@@ -307,12 +311,16 @@ namespace Incident_Add_Products
                                         test.Remove("DISONAP249");
                                     }
                                 }
+                                items.OrderBy(o => o.Description);
+                                dataGridServicios.DataSource = items;
+                                dataGridServicios.Columns[0].Visible = false;
+                                dataGridServicios.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
                                 CboProductos.DataSource = new BindingSource(test.OrderBy(item => item.Value), null);
                                 CboProductos.DisplayMember = "Value";
                                 CboProductos.ValueMember = "Key";
                                 string value = ((KeyValuePair<string, string>)CboProductos.SelectedItem).Value;
                                 CboProductos.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
-                                CboProductos.AutoCompleteSource = AutoCompleteSource.ListItems;
+                                CboProductos.AutoCompleteSource = AutoCompleteSource.CustomSource;
                                 AutoCompleteStringCollection combData = dataCollection;
                                 CboProductos.AutoCompleteCustomSource = combData;
                             }
@@ -912,6 +920,48 @@ namespace Incident_Add_Products
             }
 
         }
+        private void CboProductos_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void txtSearch_TextChanged(object sender, EventArgs e)
+        {
+            dataGridServicios.DataSource = null;
+            List<Items> s = new List<Items>();
+            if (!string.IsNullOrEmpty(txtSearch.Text))
+            {
+                foreach (Items i in items)
+                {
+                    if (i.Description.Contains(txtSearch.Text.ToUpper()))
+                    {
+                        s.Add(i);
+                    }
+                }
+            }
+            else
+            {
+                s = items;
+            }
+            dataGridServicios.DataSource = s;
+            dataGridServicios.Columns[0].Visible = false;
+            dataGridServicios.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        }
+
+        private void dataGridServicios_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (ItiObject != null || Incident != null)
+            {
+                ItemNumberParent = dataGridServicios.Rows[e.RowIndex].Cells[0].FormattedValue.ToString();
+                ItemDesc = dataGridServicios.Rows[e.RowIndex].Cells[1].FormattedValue.ToString();
+                GetPData(AirtportText, SRType, ItemNumberParent);
+            }
+        }
+    }
+    public class Items
+    {
+        public string ItemNumber { get; set; }
+        public string Description { get; set; }
     }
     public class ComponentChild
     {
