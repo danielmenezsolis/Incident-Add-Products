@@ -45,6 +45,7 @@ namespace Incident_Add_Products
         public string Categories { get; set; }
         public string ItemNumberParent { get; set; }
         public string ItemDesc { get; set; }
+        public string Tax { get; set; }
         public List<Items> items { get; set; }
 
 
@@ -178,6 +179,7 @@ namespace Incident_Add_Products
                 if (!string.IsNullOrEmpty(ItemN))
                 {
                     envelope += "<typ1:findAttribute>ItemDFF</typ1:findAttribute>";
+                    envelope += "<typ1:findAttribute>OutputTaxClassificationCodeValue</typ1:findAttribute>";
                 }
                 envelope += "</typ:findCriteria>" +
                  "<typ:findControl>" +
@@ -226,6 +228,26 @@ namespace Incident_Add_Products
                         nms.AddNamespace("ns1", "http://xmlns.oracle.com/apps/scm/productModel/items/itemServiceV2/");
                         if (!String.IsNullOrEmpty(ItemN))
                         {
+                            XmlNodeList nodeList = xmlDoc.SelectNodes("//ns0:Value", nms);
+                            foreach (XmlNode node in nodeList)
+                            {
+                                Items item = new Items();
+                                if (node.HasChildNodes)
+                                {
+                                    if (node.LocalName == "Value")
+                                    {
+                                        XmlNodeList nodeListvalue = node.ChildNodes;
+                                        foreach (XmlNode nodeValue in nodeListvalue)
+                                        {
+                                            if (nodeValue.LocalName == "OutputTaxClassificationCodeValue")
+                                            {
+                                                Tax = nodeValue.InnerText;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
                             XmlNode desiredNode = xmlDoc.SelectSingleNode("//ns1:ItemDFF", nms);
                             if (desiredNode.HasChildNodes)
                             {
@@ -291,7 +313,15 @@ namespace Incident_Add_Products
                                             }
                                         }
                                     }
-                                    if (item.ItemNumber != "AGASIAS0270" && item.ItemNumber != "JFUEIAS0269" && item.ItemNumber != "AGASIAS0011" && item.ItemNumber != "JFUEIAS0010" && item.ItemNumber != "IAFMUAS0271" && item.ItemNumber != "AFMURAS0016")
+                                    if (SRType == "FCC")
+                                    {
+                                        if (item.ItemNumber != "AGASIAS0270" && item.ItemNumber != "JFUEIAS0269" && item.ItemNumber != "AGASIAS0011" && item.ItemNumber != "JFUEIAS0010" && item.ItemNumber != "IAFMUAS0271" && item.ItemNumber != "AFMURAS0016" && item.ItemNumber != "ANFERAS0013" && item.ItemNumber != "ANFMSAP310" && item.ItemNumber != "ANIASAS0015")
+                                        {
+                                            test.Add(item.ItemNumber, item.Description);
+                                            items.Add(item);
+                                        }
+                                    }
+                                    else
                                     {
                                         test.Add(item.ItemNumber, item.Description);
                                         items.Add(item);
@@ -557,6 +587,10 @@ namespace Incident_Add_Products
                 if (genField.Name == "Categories")
                 {
                     genField.DataValue.Value = Categories;
+                }
+                if (genField.Name == "IVA")
+                {
+                    genField.DataValue.Value = Tax;
                 }
             }
 
@@ -957,6 +991,7 @@ namespace Incident_Add_Products
                 GetPData(AirtportText, SRType, ItemNumberParent);
             }
         }
+
     }
     public class Items
     {

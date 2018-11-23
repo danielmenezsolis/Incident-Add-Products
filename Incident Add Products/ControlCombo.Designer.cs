@@ -102,6 +102,7 @@
             this.dataGridServicios.Size = new System.Drawing.Size(626, 104);
             this.dataGridServicios.TabIndex = 5;
             this.dataGridServicios.TabStop = false;
+            
             this.dataGridServicios.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridServicios_CellDoubleClick);
             // 
             // txtSearch
