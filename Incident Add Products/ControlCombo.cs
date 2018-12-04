@@ -151,11 +151,8 @@ namespace Incident_Add_Products
                  "</typ1:item>" +
                  "</typ1:group>" +
                  "</typ1:nested>" +
-                 "</typ1:item>";
-                if (SRType == "CATERING")
-                {
-                    envelope +=
-                         "<typ1:item>" +
+                 "</typ1:item>" +
+                 "<typ1:item>" +
                  "<typ1:conjunction>And</typ1:conjunction>" +
                  "<typ1:attribute>ItemDFF</typ1:attribute>" +
                  "<typ1:nested>" +
@@ -169,13 +166,12 @@ namespace Incident_Add_Products
                  "</typ1:item>" +
                  "</typ1:group>" +
                  "</typ1:nested>" +
-                 "</typ1:item>";
-                }
-                envelope += "</typ1:group>" +
-                                 "</typ1:filter>" +
-                                 "<typ1:findAttribute>OrganizationCode</typ1:findAttribute>" +
-                                 "<typ1:findAttribute>ItemNumber</typ1:findAttribute>" +
-                                 "<typ1:findAttribute>ItemDescription</typ1:findAttribute>";
+                 "</typ1:item>"+
+                 "</typ1:group>" +
+                 "</typ1:filter>" +
+                 "<typ1:findAttribute>OrganizationCode</typ1:findAttribute>" +
+                 "<typ1:findAttribute>ItemNumber</typ1:findAttribute>" +
+                 "<typ1:findAttribute>ItemDescription</typ1:findAttribute>";
                 if (!string.IsNullOrEmpty(ItemN))
                 {
                     envelope += "<typ1:findAttribute>ItemDFF</typ1:findAttribute>";
